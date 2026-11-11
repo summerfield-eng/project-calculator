@@ -1,8 +1,12 @@
 const operatorContainer = document.querySelector(".numANdOperatorsBtns");
 const display = document.querySelector(".display");
 
-let calc = [];
-let lastOperator = "";
+let firstNum = 0;
+let secondNum = 0;
+let operator = "";
+
+//let answer = 0;
+// let indexes = 0;
 
 function addNum(a, b) {
   return a + b;
@@ -16,32 +20,24 @@ function multiplyNum(a, b) {
 function divideNum(a, b) {
   return a / b;
 }
-
-function operate(operate, arr) {
+function operate(operate, a, b) {
+  // console.table({
+  //   typeofA: `${typeof a}`,
+  //   typeofB: `${typeof b}`,
+  // });
   switch (operate) {
-    case operate === "+":
-      let sum = addNum(arr[0], arr[1]);
-      return sum;
-    case operate === "-":
-      let diff = addNum(arr[0], arr[1]);
-      display.value = diff;
-      arr = diff;
-      break;
-    case operate === "*":
-      let multi = addNum(arr[0], arr[1]);
-      display.value = multi;
-      arr = multi;
-      break;
-    case operate === "/":
-      let divi = addNum(arr[0], arr[1]);
-      display.value = divi;
-      arr = divi;
-      break;
+    case "+":
+      return addNum(a, b);
+    case "-":
+      return subtractNum(a, b);
+    case "*":
+      return multiplyNum(a, b);
+    case "/":
+      return divideNum(a, b);
     default:
-      console.log("nothing happened");
+      console.warn("You shouldnt see this");
   }
 }
-
 function createBtns(text) {
   const btn = document.createElement("button");
   btn.textContent = text;
@@ -59,24 +55,25 @@ function createBtns(text) {
 
   return btn;
 }
-
 function appendOperators(container) {
   let operators = [
     1,
     2,
     3,
+    "+",
     4,
     5,
     6,
+    "-",
     7,
     8,
     9,
-    0,
-    "+",
-    "-",
     "*",
-    "/",
+    0,
+    ".",
     "=",
+    "/",
+    "Delete",
     "Clear",
   ];
   let arrBtns = operators.map((operator) => createBtns(operator));
@@ -88,9 +85,8 @@ function appendOperators(container) {
 
   container.appendChild(frag);
 }
-
 function calcButtonWidthHeight() {
-  const h = operatorContainer.closest(".calcContainer").clientHeight / 4;
+  const h = operatorContainer.closest(".calcContainer").clientHeight / 5;
   const w = operatorContainer.closest(".calcContainer").clientWidth / 4;
 
   operatorContainer.querySelectorAll(".btn").forEach((btn) => {
@@ -98,12 +94,10 @@ function calcButtonWidthHeight() {
     btn.style.width = w + "px";
   });
 }
-
 function appInit() {
   appendOperators(operatorContainer);
   calcButtonWidthHeight();
 }
-
 function showValueOnDisplay(target) {
   display.value += target.textContent;
 }
@@ -113,25 +107,99 @@ operatorContainer.addEventListener("click", function (e) {
 
   if (target.classList.contains("Clear")) {
     display.value = "";
+    firstNum = 0;
+    secondNum = 0;
     return;
   } else if (target.classList.contains("operator")) {
-    if (calc.length === 2) {
-      console.log(`lastOperator: ${lastOperator}`);
-      let answer = operate(lastOperator, calc);
-      calc = []; // clear the value of the array
-      calc.push(answer); // passed the previous answer to the array
-      console.log(answer);
+    if (target.classList.contains("=")) {
+      target.classList.remove("currentOperator");
+      handleEquals(target);
     } else {
-      lastOperator = target.innerText;
-      calc.push(display.value);
-      display.value = "";
-      console.log(calc);
+      target.classList.add("currentOperator");
+      handleOperator(target);
     }
   } else {
-    showValueOnDisplay(target);
-    console.log(calc);
+    handleNumber(target);
   }
 });
 
-function equalHandler() {}
+function handleNumber(target) {
+  showValueOnDisplay(target);
+
+  if (!operator) {
+    firstNum = Number(display.value);
+  } else {
+    secondNum = Number(display.value);
+  }
+
+  console.log(`firstNum: ${firstNum}`);
+  console.log(`secondNum: ${secondNum}`);
+}
+function handleOperator(target) {
+  const nextOperator = target.innerText;
+
+  if (operator && display.value !== "") {
+    // Finish the pending calculation first
+    secondNum = Number(display.value);
+    firstNum = operate(operator, firstNum, secondNum);
+  } else if (!operator && display.value !== "") {
+    // No pending operation: use the displayed value as the first number
+    firstNum = Number(display.value);
+  }
+
+  operator = nextOperator;
+  secondNum = 0;
+  display.value = "";
+}
+function handleEquals(target) {
+  let answer = operate(operator, firstNum, secondNum);
+  display.value = answer;
+  firstNum = answer;
+  operator = "";
+}
+// function valueAssignToggler(target) {
+//   if (indexes === 0) {
+//     firstNum = parseInt(display.value);
+//     initialOperator = target.innerText;
+//     display.value = target.innerText;
+//     indexes++;
+//   } else if (indexes === 1) {
+//     secondNum = parseInt(display.value);
+//   }
+// }
+
 appInit();
+
+/*
+when an operator is pressed,
+  check what operator
+    IF the operator is not an equal sign,
+      THEN check the index
+        IF the index is 0 THEN assign the current displayed value to firstNum
+          THEN assign the operator on the initialOperator
+        IF the index is 1 THEN assign the current displayed value to secondNum
+          THEN operate on firstNum and secondNum
+          THEN assign the answer to the firstNum
+          THEN initialized secondNum to 0
+      THEN clear the display and add the operator
+      THEN increase the index
+    IF the operator is an equal sign
+      THEN take the displayed value and assign it o secondNum
+      THEN operate on the firstNum and secondNum
+      THEN assign the answer to the firstNum
+      THEN display the answer on the input
+      THEN initialized the index to 0
+
+
+
+   // console.table({
+    //   firstNum: `${firstNum}`,
+    //   secondNum: `${secondNum}`,
+    //   index: `${indexes}`,
+    //   initialOperator: `${initialOperator}`,
+    // });
+ 
+
+
+
+*/
